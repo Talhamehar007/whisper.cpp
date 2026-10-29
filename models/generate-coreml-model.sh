@@ -19,13 +19,22 @@ mname="$1"
 wd=$(dirname "$0")
 cd "$wd/../" || exit
 
+# Prefer uv run python when uv is available, fallback to python3
+if [ -z "$PYTHON" ]; then
+  if command -v uv >/dev/null 2>&1; then
+    PYTHON="uv run python"
+  else
+    PYTHON="python3"
+  fi
+fi
+
 if [ "$mname" = "-h5" ]; then
   mname="$2"
   mpath="$3"
   echo "$mpath"
-  python3 models/convert-h5-to-coreml.py --model-name "$mname" --model-path "$mpath" --encoder-only True
+  $PYTHON models/convert-h5-to-coreml.py --model-name "$mname" --model-path "$mpath" --encoder-only True
 else
-  python3 models/convert-whisper-to-coreml.py --model "$mname" --encoder-only True --optimize-ane True
+  $PYTHON models/convert-whisper-to-coreml.py --model "$mname" --encoder-only True --optimize-ane True
 fi
 
 xcrun coremlc compile models/coreml-encoder-"${mname}".mlpackage models/
